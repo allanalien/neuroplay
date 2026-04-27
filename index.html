@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroPlay - Brain Training Games</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a1a;
+  --card:#12122a;
+  --accent:#00f0ff;
+  --accent2:#ff00e5;
+  --gold:#ffd700;
+  --green:#00ff88;
+  --red:#ff4466;
+  --text:#e0e0ff;
+  --glass:rgba(18,18,42,0.85);
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Segoe UI',system-ui,sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 20% 50%,rgba(0,240,255,0.06) 0%,transparent 50%),
+             radial-gradient(ellipse at 80% 20%,rgba(255,0,229,0.05) 0%,transparent 50%),
+             radial-gradient(ellipse at 50% 80%,rgba(0,255,136,0.04) 0%,transparent 50%);
+  pointer-events:none;z-index:0;
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(10,10,26,0.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  padding:12px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{font-size:1.4rem;font-weight:800;letter-spacing:-1px}
+.logo span:first-child{color:var(--accent)}
+.logo span:last-child{color:var(--accent2)}
+.nav-links{display:flex;gap:8px}
+.nav-links button{
+  background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.1);
+  padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.82rem;
+  transition:all 0.3s;
+}
+.nav-links button:hover{border-color:var(--accent);color:var(--accent)}
+.nav-links button.active{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:700}
+
+/* MAIN */
+main{
+  position:relative;z-index:1;padding-top:80px;padding-bottom:40px;
+  max-width:800px;margin:0 auto;padding-left:20px;padding-right:20px;
+}
+
+/* SCREENS */
+.screen{display:none;animation:fadeIn 0.4s}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* HOME */
+.home-hero{text-align:center;padding:40px 0}
+.home-hero h1{font-size:2.8rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.home-hero p{color:rgba(255,255,255,0.55);font-size:1.1rem;margin-bottom:32px}
+
+.game-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.game-card{
+  background:var(--glass);border:1px solid rgba(255,255,255,0.06);
+  border-radius:20px;padding:28px 20px;cursor:pointer;
+  transition:all 0.35s;position:relative;overflow:hidden;
+}
+.game-card::after{
+  content:'';position:absolute;inset:0;
+  border-radius:20px;opacity:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  transition:opacity 0.35s;
+}
+.game-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,0.2)}
+.game-card:hover::after{opacity:0.06}
+.game-card .icon{font-size:2.6rem;margin-bottom:12px;position:relative;z-index:1}
+.game-card h3{font-size:1.1rem;margin-bottom:6px;position:relative;z-index:1}
+.game-card p{font-size:0.8rem;color:rgba(255,255,255,0.45);position:relative;z-index:1}
+.game-card .badge{
+  position:absolute;top:12px;right:12px;z-index:1;
+  background:rgba(0,240,255,0.12);color:var(--accent);
+  font-size:0.65rem;padding:3px 10px;border-radius:10px;font-weight:700
+}
+
+/* GENERIC GAME */
+.game-container{
+  background:var(--glass);border:1px solid rgba(255,255,255,0.06);
+  border-radius:24px;padding:32px;
+}
+.game-name{font-size:1.6rem;font-weight:700;text-align:center;margin-bottom:4px}
+.game-desc{font-size:0.85rem;color:rgba(255,255,255,0.45);text-align:center;margin-bottom:24px}
+
+.stats-bar{display:flex;justify-content:space-around;margin-bottom:24px;gap:12px}
+.stat{
+  background:rgba(255,255,255,0.03);border-radius:16px;padding:12px 20px;
+  text-align:center;flex:1;
+}
+.stat .val{font-size:1.6rem;font-weight:800;color:var(--accent)}
+.stat .lbl{font-size:0.7rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px}
+
+.btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:var(--bg);border:none;padding:14px 32px;border-radius:40px;
+  font-size:0.95rem;font-weight:700;cursor:pointer;
+  transition:all 0.3s;
+}
+.btn:hover{transform:scale(1.04);box-shadow:0 0 30px rgba(0,240,255,0.25)}
+.btn:active{transform:scale(0.97)}
+.btn-sm{padding:8px 20px;font-size:0.8rem}
+.btn-outline{
+  background:transparent;color:var(--text);
+  border:1px solid rgba(255,255,255,0.2)
+}
+
+/* MEMORY MATCH */
+.memory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.memory-card{
+  aspect-ratio:1;background:linear-gradient(135deg,rgba(0,240,255,0.1),rgba(255,0,229,0.1));
+  border:2px solid rgba(255,255,255,0.08);border-radius:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:2rem;transition:all 0.4s;position:relative;
+  transform-style:preserve-3d;user-select:none;
+}
+.memory-card.flipped{border-color:var(--accent);background:rgba(0,240,255,0.08)}
+.memory-card.matched{background:rgba(0,255,136,0.1);border-color:var(--green);pointer-events:none}
+.memory-card:hover:not(.flipped):not(.matched){border-color:rgba(255,255,255,0.3)}
+.memory-card .card-face{transition:opacity 0.3s}
+.memory-card:not(.flipped) .card-face{opacity:0}
+.memory-card.flipped .card-face{opacity:1}
+
+/* STROOP */
+.stroop-word{font-size:4rem;font-weight:900;text-align:center;margin:24px 0;letter-spacing:2px;text-shadow:0 0 40px currentColor}
+.stroop-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.stroop-btn{
+  width:80px;height:80px;border-radius:50%;border:3px solid rgba(255,255,255,0.15);
+  cursor:pointer;transition:all 0.25s;font-weight:800;font-size:0.85rem
+}
+.stroop-btn:hover{transform:scale(1.12);box-shadow:0 0 30px currentColor}
+.stroop-btn:active{transform:scale(0.95)}
+.stroop-timer{height:6px;background:rgba(255,255,255,0.05);border-radius:3px;margin-bottom:12px;overflow:hidden}
+.stroop-timer-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--accent),var(--accent2),var(--red));border-radius:3px;transition:width 0.5s linear}
+.stroop-timer-bar.warning{background:var(--gold)}
+.stroop-timer-bar.danger{background:var(--red)}
+
+/* SEQUENCE */
+.seq-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:300px;margin:24px auto}
+.seq-btn{
+  aspect-ratio:1;border-radius:20px;border:3px solid rgba(255,255,255,0.1);
+  cursor:pointer;transition:all 0.2s;position:relative;background:rgba(255,255,255,0.03)
+}
+.seq-btn:nth-child(1){--c:#ff4466}
+.seq-btn:nth-child(2){--c:#00ff88}
+.seq-btn:nth-child(3){--c:#ffd700}
+.seq-btn:nth-child(4){--c:#00f0ff}
+.seq-btn.active{background:var(--c);border-color:var(--c);box-shadow:0 0 40px var(--c);transform:scale(1.04)}
+.seq-btn.user-active{background:var(--c);border-color:var(--c);box-shadow:0 0 20px var(--c)}
+.seq-segment{display:inline-block;width:12px;height:12px;border-radius:50%;margin:0 3px}
+.seq-segment.c0{background:var(--red)}
+.seq-segment.c1{background:var(--green)}
+.seq-segment.c2{background:var(--gold)}
+.seq-segment.c3{background:var(--accent)}
+.seq-display{display:flex;justify-content:center;margin:16px 0;gap:6px;flex-wrap:wrap}
+
+/* MATH */
+.math-problem{font-size:3rem;font-weight:900;text-align:center;margin:16px 0;letter-spacing:3px}
+.math-input{
+  background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.1);
+  color:var(--text);font-size:1.5rem;padding:14px 20px;border-radius:16px;
+  width:160px;text-align:center;margin:0 auto;display:block;outline:none;transition:border-color 0.3s
+}
+.math-input:focus{border-color:var(--accent)}
+.math-input.correct{border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,0.3)}
+.math-input.wrong{border-color:var(--red);box-shadow:0 0 20px rgba(255,68,102,0.3);animation:shake 0.4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* PATTERN */
+.pattern-grid{display:grid;gap:8px;margin:24px auto;max-width:280px}
+.pattern-3x3{grid-template-columns:repeat(3,1fr)}
+.pattern-cell{
+  aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.06)
+}
+.pattern-cell.missing{border-color:var(--accent2);border-style:dashed;background:rgba(255,0,229,0.05)}
+.pattern-options{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.pattern-opt{
+  aspect-ratio:1;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.08);
+  cursor:pointer;transition:all 0.3s
+}
+.pattern-opt:hover{border-color:var(--accent);background:rgba(0,240,255,0.06);transform:scale(1.05)}
+.pattern-opt.correct{border-color:var(--green)!important;background:rgba(0,255,136,0.12)!important}
+.pattern-opt.wrong{border-color:var(--red)!important;background:rgba(255,68,102,0.12)!important;animation:shake 0.4s}
+
+/* OVERLAY */
+.overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn 0.3s;
+}
+.overlay-card{
+  background:var(--card);border:1px solid rgba(255,255,255,0.1);
+  border-radius:24px;padding:40px;text-align:center;max-width:380px
+}
+.overlay-card h2{font-size:1.8rem;margin-bottom:8px}
+.overlay-card .big-num{font-size:4rem;font-weight:900;margin:16px 0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent
+}
+.overlay-card button{margin-top:20px}
+
+/* PARTICLES */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:300}
+.particle{
+  position:absolute;font-size:1.4rem;
+  animation:particleUp 1.2s ease-out forwards;
+}
+@keyframes particleUp{
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-200px) scale(0.3) rotate(180deg)}
+}
+
+@media(max-width:600px){
+  .home-hero h1{font-size:1.8rem}
+  .game-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .game-card{padding:20px 14px}
+  .memory-grid{gap:6px}
+  .memory-card{font-size:1.4rem;border-radius:10px}
+  .stroop-word{font-size:2.6rem}
+  .pattern-options{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span>NEURO</span><span>PLAY</span></div>
+  <div class="nav-links">
+    <button onclick="showScreen('home')" class="active" data-nav="home">Home</button>
+    <button onclick="showScreen('memory')" data-nav="memory">Memory</button>
+    <button onclick="showScreen('stroop')" data-nav="stroop">Stroop</button>
+    <button onclick="showScreen('sequence')" data-nav="sequence">Sequence</button>
+    <button onclick="showScreen('math')" data-nav="math">Math</button>
+    <button onclick="showScreen('pattern')" data-nav="pattern">Pattern</button>
+    <button onclick="showScreen('nback')" data-nav="nback">N-Back</button>
+    <button onclick="showScreen('oddone')" data-nav="oddone">Odd One</button>
+    <button onclick="showScreen('numseq')" data-nav="numseq">Sequences</button>
+    <button onclick="showScreen('scramble')" data-nav="scramble">Scramble</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- HOME SCREEN -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <h1>Train Your Brain</h1>
+    <p>9 scientifically-inspired games to sharpen your mind</p>
+  </div>
+  <div class="game-grid">
+    <div class="game-card" onclick="showScreen('memory')">
+      <div class="badge">MEMORY</div>
+      <div class="icon">🧠</div>
+      <h3>Memory Match</h3>
+      <p>Find matching pairs. Train your visual short-term memory.</p>
+    </div>
+    <div class="game-card" onclick="showScreen('stroop')">
+      <div class="badge">FLEXIBILITY</div>
+      <div class="icon">🎨</div>
+      <h3>Stroop Challenge</h3>
+      <p>Name the color, not the word. Boost cognitive flexibility.</p>
+    </div>
+    <div class="game-card" onclick="showScreen('sequence')">
+      <div class="badge">WORKING MEMORY</div>
+      <div class="icon">🔢</div>
+      <h3>Sequence Memory</h3>
+      <p>Repeat growing patterns. Challenge your working memory span.</p>
+    </div>
+    <div class="game-card" onclick="showScreen('math')">
+      <div class="badge">SPEED</div>
+      <div class="icon">⚡</div>
+      <h3>Speed Math</h3>
+      <p>Solve problems fast. Sharpen mental processing speed.</p>
+    </div>
+    <div class="game-card" onclick="showScreen('pattern')">
+      <div class="badge">REASONING</div>
+      <div class="icon">🔍</div>
+      <h3>Visual Matrix</h3>
+      <p>Complete the pattern. Train fluid intelligence & logic.</p>
+    </div>
+    <div class="game-card" onclick="showScreen('nback')">
+      <div class="badge">WORKING MEMORY</div>
+      <div class="icon">🔄</div>
+      <h3>N-Back</h3>
+      <p>Match N steps back. The most studied WM training task in neuroscience.</p>
+    </div>
+    <div class="game-card" onclick="showScreen('oddone')">
+      <div class="badge">ATTENTION</div>
+      <div class="icon">👁️</div>
+      <h3>Odd One Out</h3>
+      <p>Spot the outlier. Sharpen visual attention & processing speed.</p>
+    </div>
+    <div class="game-card" onclick="showScreen('numseq')">
+      <div class="badge">LOGIC</div>
+      <div class="icon">📐</div>
+      <h3>Number Sequence</h3>
+      <p>Find the next number. Exercise logical-mathematical reasoning.</p>
+    </div>
+    <div class="game-card" onclick="showScreen('scramble')">
+      <div class="badge">VERBAL</div>
+      <div class="icon">🔤</div>
+      <h3>Word Scramble</h3>
+      <p>Unscramble letters. Boost verbal fluency & vocabulary.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MEMORY MATCH -->
+<div class="screen" id="screen-memory">
+  <div class="game-container">
+    <div class="game-name">Memory Match</div>
+    <div class="game-desc">Find all 8 matching pairs</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="mem-moves">0</div><div class="lbl">Moves</div></div>
+      <div class="stat"><div class="val" id="mem-pairs">0/8</div><div class="lbl">Pairs</div></div>
+      <div class="stat"><div class="val" id="mem-time">0s</div><div class="lbl">Time</div></div>
+    </div>
+    <div class="memory-grid" id="memory-grid"></div>
+    <div style="text-align:center"><button class="btn btn-sm" onclick="startMemoryGame()">New Game</button></div>
+  </div>
+</div>
+
+<!-- STROOP -->
+<div class="screen" id="screen-stroop">
+  <div class="game-container">
+    <div class="game-name">Stroop Challenge</div>
+    <div class="game-desc">Identify the <b>COLOR</b> of the text, not the word itself</div>
+    <div class="stroop-timer"><div class="stroop-timer-bar" id="stroop-timer-bar" style="width:100%"></div></div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="stroop-score">0</div><div class="lbl">Score</div></div>
+      <div class="stat"><div class="val" id="stroop-streak">0</div><div class="lbl">Streak</div></div>
+      <div class="stat"><div class="val" id="stroop-time">30</div><div class="lbl">Seconds</div></div>
+    </div>
+    <div class="stroop-word" id="stroop-word">RED</div>
+    <div class="stroop-buttons" id="stroop-buttons"></div>
+    <div style="text-align:center;margin-top:20px"><button class="btn btn-sm" id="stroop-start" onclick="startStroopGame()">Start</button></div>
+  </div>
+</div>
+
+<!-- SEQUENCE -->
+<div class="screen" id="screen-sequence">
+  <div class="game-container">
+    <div class="game-name">Sequence Memory</div>
+    <div class="game-desc">Watch the pattern, then repeat it</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="seq-level">1</div><div class="lbl">Level</div></div>
+      <div class="stat"><div class="val" id="seq-best">1</div><div class="lbl">Best</div></div>
+      <div class="stat"><div class="val" id="seq-status">READY</div><div class="lbl">Status</div></div>
+    </div>
+    <div class="seq-grid" id="seq-grid"></div>
+    <div class="seq-display" id="seq-display"></div>
+    <div style="text-align:center"><button class="btn btn-sm" id="seq-start" onclick="startSequenceGame()">Start</button></div>
+  </div>
+</div>
+
+<!-- MATH -->
+<div class="screen" id="screen-math">
+  <div class="game-container">
+    <div class="game-name">Speed Math</div>
+    <div class="game-desc">Solve as many as you can in 60 seconds</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="math-score">0</div><div class="lbl">Score</div></div>
+      <div class="stat"><div class="val" id="math-streak">0</div><div class="lbl">Streak</div></div>
+      <div class="stat"><div class="val" id="math-time">60</div><div class="lbl">Seconds</div></div>
+    </div>
+    <div class="math-problem" id="math-problem">12 + 7</div>
+    <input type="number" class="math-input" id="math-input" placeholder="?" autocomplete="off">
+    <div style="text-align:center;margin-top:16px"><button class="btn btn-sm" id="math-start" onclick="startMathGame()">Start</button></div>
+  </div>
+</div>
+
+<!-- PATTERN -->
+<div class="screen" id="screen-pattern">
+  <div class="game-container">
+    <div class="game-name">Visual Matrix</div>
+    <div class="game-desc">Pick the piece that completes the pattern</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="pat-score">0</div><div class="lbl">Score</div></div>
+      <div class="stat"><div class="val" id="pat-round">1</div><div class="lbl">Round</div></div>
+      <div class="stat"><div class="val" id="pat-best">0</div><div class="lbl">Best</div></div>
+    </div>
+    <div id="pattern-puzzle"></div>
+    <div style="text-align:center;margin-top:16px"><button class="btn btn-sm" onclick="startPatternGame()">New Puzzle</button></div>
+  </div>
+</div>
+
+<!-- N-BACK -->
+<div class="screen" id="screen-nback">
+  <div class="game-container">
+    <div class="game-name">N-Back Memory</div>
+    <div class="game-desc">Press <b style="color:#00ff88">YES</b> if the highlighted square is in the <b style="color:#00f0ff">same position</b> as <b id="nback-n">1</b> step(s) ago. Otherwise press <b style="color:#ff4466">NO</b>.</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="nback-score">0</div><div class="lbl">Score</div></div>
+      <div class="stat"><div class="val" id="nback-level">N=1</div><div class="lbl">Level</div></div>
+      <div class="stat"><div class="val" id="nback-trial">0/20</div><div class="lbl">Trial</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:240px;margin:20px auto" id="nback-grid"></div>
+    <div style="text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.35);margin:8px 0" id="nback-history"></div>
+    <div style="display:flex;justify-content:center;gap:16px;margin:12px 0">
+      <button class="btn btn-sm" id="nback-yes" style="background:var(--green);min-width:100px" onclick="nbackAnswer(true)">✓ YES</button>
+      <button class="btn btn-sm" id="nback-no" style="background:var(--red);min-width:100px" onclick="nbackAnswer(false)">✗ NO</button>
+    </div>
+    <div style="text-align:center"><button class="btn btn-sm" id="nback-start" onclick="startNbackGame()">Start</button></div>
+  </div>
+</div>
+
+<!-- ODD ONE OUT -->
+<div class="screen" id="screen-oddone">
+  <div class="game-container">
+    <div class="game-name">Odd One Out</div>
+    <div class="game-desc">Find the item that doesn't belong</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="odd-score">0</div><div class="lbl">Score</div></div>
+      <div class="stat"><div class="val" id="odd-round">1</div><div class="lbl">Round</div></div>
+      <div class="stat"><div class="val" id="odd-best">0</div><div class="lbl">Best</div></div>
+    </div>
+    <div id="odd-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:300px;margin:16px auto"></div>
+    <div style="text-align:center"><button class="btn btn-sm" id="odd-start" onclick="startOddGame()">Start</button></div>
+  </div>
+</div>
+
+<!-- NUMBER SEQUENCE -->
+<div class="screen" id="screen-numseq">
+  <div class="game-container">
+    <div class="game-name">Number Sequence</div>
+    <div class="game-desc">What comes next in the sequence?</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="ns-score">0</div><div class="lbl">Score</div></div>
+      <div class="stat"><div class="val" id="ns-round">1</div><div class="lbl">Round</div></div>
+      <div class="stat"><div class="val" id="ns-best">0</div><div class="lbl">Best</div></div>
+    </div>
+    <div class="math-problem" id="ns-sequence">2, 4, 6, 8, ?</div>
+    <input type="number" class="math-input" id="ns-input" placeholder="?" autocomplete="off">
+    <div style="text-align:center;margin-top:16px"><button class="btn btn-sm" id="ns-start" onclick="startNumSeqGame()">Start</button></div>
+  </div>
+</div>
+
+<!-- WORD SCRAMBLE -->
+<div class="screen" id="screen-scramble">
+  <div class="game-container">
+    <div class="game-name">Word Scramble</div>
+    <div class="game-desc">Unscramble the letters to form a word</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="val" id="ws-score">0</div><div class="lbl">Score</div></div>
+      <div class="stat"><div class="val" id="ws-round">1</div><div class="lbl">Round</div></div>
+      <div class="stat"><div class="val" id="ws-best">0</div><div class="lbl">Best</div></div>
+    </div>
+    <div style="font-size:2.6rem;font-weight:900;letter-spacing:12px;text-align:center;margin:20px 0" id="ws-letters">T C A</div>
+    <input type="text" class="math-input" id="ws-input" placeholder="type word" autocomplete="off" autocapitalize="off" style="width:200px">
+    <div style="text-align:center;margin-top:16px"><button class="btn btn-sm" id="ws-start" onclick="startScrambleGame()">Start</button></div>
+  </div>
+</div>
+
+</main>
+
+<div class="particles" id="particles"></div>
+<div class="overlay" id="overlay" style="display:none"></div>
+
+<script>
+// ===== NAVIGATION =====
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'))
+  document.querySelectorAll('[data-nav]').forEach(b=>b.classList.remove('active'))
+  document.getElementById('screen-'+name).classList.add('active')
+  document.querySelector('[data-nav="'+name+'"]').classList.add('active')
+}
+window.showScreen=showScreen
+
+// ===== PARTICLES =====
+function spawnParticles(x,y){
+  const emojis=['✨','⭐','💫','🌟','🎉','🔥','💎','🏆']
+  const c=document.getElementById('particles')
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div')
+    p.className='particle'
+    p.textContent=emojis[Math.floor(Math.random()*emojis.length)]
+    p.style.left=x+'px';p.style.top=y+'px'
+    p.style.animationDuration=(0.8+Math.random()*1)+'s'
+    p.style.animationDelay=(Math.random()*0.3)+'s'
+    c.appendChild(p)
+    setTimeout(()=>p.remove(),1800)
+  }
+}
+
+function showOverlay(title,text,btn,fn){
+  const o=document.getElementById('overlay')
+  o.style.display='flex'
+  o.innerHTML=`<div class="overlay-card"><h2>${title}</h2><div class="big-num">${text}</div><button class="btn" id="overlay-btn">${btn}</button></div>`
+  document.getElementById('overlay-btn').onclick=()=>{o.style.display='none';if(fn)fn()}
+}
+
+// ==========================================
+// GAME 1: MEMORY MATCH
+// ==========================================
+let memState={cards:[],flipped:[],matched:new Set(),moves:0,locked:false,timer:null,seconds:0}
+
+const MEM_EMOJIS=['🐶','🐱','🦊','🐼','🐨','🐸','🦄','🐙']
+
+function startMemoryGame(){
+  clearInterval(memState.timer)
+  const pairs=[...MEM_EMOJIS,...MEM_EMOJIS]
+  for(let i=pairs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pairs[i],pairs[j]]=[pairs[j],pairs[i]]}
+  memState={cards:pairs,flipped:[],matched:new Set(),moves:0,locked:false,timer:null,seconds:0}
+  document.getElementById('mem-moves').textContent='0'
+  document.getElementById('mem-pairs').textContent='0/8'
+  document.getElementById('mem-time').textContent='0s'
+  renderMemory()
+}
+
+function renderMemory(){
+  const g=document.getElementById('memory-grid')
+  g.innerHTML=''
+  memState.cards.forEach((emoji,i)=>{
+    const c=document.createElement('div')
+    c.className='memory-card'
+    if(memState.flipped.includes(i)||memState.matched.has(i)) c.classList.add('flipped')
+    if(memState.matched.has(i)) c.classList.add('matched')
+    c.innerHTML='<span class="card-face">'+emoji+'</span>'
+    c.onclick=()=>flipCard(i)
+    g.appendChild(c)
+  })
+}
+
+function flipCard(i){
+  if(memState.locked||memState.flipped.includes(i)||memState.matched.has(i))return
+  if(!memState.timer){memState.timer=setInterval(()=>{memState.seconds++;document.getElementById('mem-time').textContent=memState.seconds+'s'},1000)}
+  memState.flipped.push(i)
+  playFlip()
+  renderMemory()
+  if(memState.flipped.length===2){
+    memState.locked=true;memState.moves++
+    document.getElementById('mem-moves').textContent=memState.moves
+    const[a,b]=memState.flipped
+    if(memState.cards[a]===memState.cards[b]){
+      playMatch()
+      memState.matched.add(a);memState.matched.add(b)
+      memState.flipped=[];memState.locked=false
+      document.getElementById('mem-pairs').textContent=(memState.matched.size/2)+'/8'
+      renderMemory()
+      if(memState.matched.size===16){
+        clearInterval(memState.timer)
+        playWinChord()
+        setTimeout(()=>{
+          spawnParticles(window.innerWidth/2,window.innerHeight/2)
+          showOverlay('Perfect!','🏆 '+memState.moves+' moves in '+memState.seconds+'s','Play Again',startMemoryGame)
+        },400)
+      }
+    }else{
+      setTimeout(()=>{memState.flipped=[];memState.locked=false;renderMemory()},700)
+    }
+  }
+}
+window.startMemoryGame=startMemoryGame
+
+// ==========================================
+// GAME 2: STROOP CHALLENGE
+// ==========================================
+const STROOP_COLORS=['RED','BLUE','GREEN','YELLOW','PURPLE','ORANGE']
+const STROOP_HEX={RED:'#ff4466',BLUE:'#4488ff',GREEN:'#00ff88',YELLOW:'#ffd700',PURPLE:'#cc44ff',ORANGE:'#ff8844'}
+let stroopState={score:0,streak:0,timeLeft:30,interval:null,currentColor:'',currentWord:'',running:false}
+
+function startStroopGame(){
+  clearInterval(stroopState.interval)
+  stroopState={score:0,streak:0,timeLeft:30,interval:null,currentColor:'',currentWord:'',running:true}
+  document.getElementById('stroop-score').textContent='0'
+  document.getElementById('stroop-streak').textContent='0'
+  document.getElementById('stroop-time').textContent='30'
+  document.getElementById('stroop-timer-bar').style.width='100%'
+  document.getElementById('stroop-timer-bar').className='stroop-timer-bar'
+  document.getElementById('stroop-start').style.display='none'
+  renderStroopButtons()
+  nextStroop()
+  stroopState.interval=setInterval(()=>{
+    stroopState.timeLeft--
+    document.getElementById('stroop-time').textContent=stroopState.timeLeft
+    const pct=(stroopState.timeLeft/30)*100
+    document.getElementById('stroop-timer-bar').style.width=pct+'%'
+    const tb=document.getElementById('stroop-timer-bar')
+    tb.className='stroop-timer-bar'
+    if(stroopState.timeLeft<=10)tb.classList.add('warning')
+    if(stroopState.timeLeft<=5)tb.classList.add('danger')
+    if(stroopState.timeLeft<=0){
+      clearInterval(stroopState.interval);stroopState.running=false
+      document.getElementById('stroop-start').style.display=''
+      showOverlay('Time\'s Up!','🏆 '+stroopState.score,'Play Again',startStroopGame)
+    }
+  },1000)
+}
+
+function renderStroopButtons(){
+  const c=document.getElementById('stroop-buttons')
+  c.innerHTML=''
+  Object.entries(STROOP_HEX).forEach(([key,hex])=>{
+    const b=document.createElement('div')
+    b.className='stroop-btn'
+    b.style.background=hex;b.style.color='#fff'
+    b.onclick=()=>stroopAnswer(key)
+    c.appendChild(b)
+  })
+}
+
+function nextStroop(){
+  const colorKey=STROOP_COLORS[Math.floor(Math.random()*STROOP_COLORS.length)]
+  let wordKey
+  do{wordKey=STROOP_COLORS[Math.floor(Math.random()*STROOP_COLORS.length)]}while(wordKey===colorKey)
+  stroopState.currentColor=colorKey;stroopState.currentWord=wordKey
+  const w=document.getElementById('stroop-word')
+  w.textContent=wordKey
+  w.style.color=STROOP_HEX[colorKey]
+}
+
+function stroopAnswer(key){
+  if(!stroopState.running)return
+  if(key===stroopState.currentColor){
+    playPop()
+    stroopState.score++;stroopState.streak++
+    document.getElementById('stroop-score').textContent=stroopState.score
+    document.getElementById('stroop-streak').textContent=stroopState.streak
+    nextStroop()
+    const w=document.getElementById('stroop-word')
+    w.style.transform='scale(1.1)';setTimeout(()=>w.style.transform='scale(1)',150)
+  }else{
+    playErrorBuzz()
+    stroopState.streak=0
+    document.getElementById('stroop-streak').textContent='0'
+    const w=document.getElementById('stroop-word')
+    w.style.transform='';w.style.animation='shake 0.4s';setTimeout(()=>w.style.animation='',400)
+  }
+}
+window.startStroopGame=startStroopGame
+
+// ===== AUDIO (Web Audio API) =====
+let audioCtx
+function getAudioCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)()
+  if(audioCtx.state==='suspended') audioCtx.resume()
+  return audioCtx
+}
+const SEQ_FREQS=[261.63,329.63,392,523.25] // C4, E4, G4, C5
+function playTone(freq,duration=0.18){
+  try{
+    const ctx=getAudioCtx()
+    const osc=ctx.createOscillator();const gain=ctx.createGain()
+    osc.type='sine';osc.frequency.value=freq
+    gain.gain.setValueAtTime(0.25,ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+duration)
+    osc.connect(gain);gain.connect(ctx.destination)
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+duration+0.05)
+  }catch(e){}
+}
+function playErrorBuzz(){
+  try{
+    const ctx=getAudioCtx()
+    const osc=ctx.createOscillator();const gain=ctx.createGain()
+    osc.type='square';osc.frequency.value=80
+    gain.gain.setValueAtTime(0.2,ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.35)
+    osc.connect(gain);gain.connect(ctx.destination)
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.4)
+  }catch(e){}
+}
+function playWinChord(){
+  try{
+    const ctx=getAudioCtx()
+    const notes=[523.25,659.25,783.99]
+    notes.forEach((f,i)=>{
+      const osc=ctx.createOscillator();const gain=ctx.createGain()
+      osc.type='sine';osc.frequency.value=f
+      gain.gain.setValueAtTime(0.15,ctx.currentTime+i*0.1)
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.1+0.4)
+      osc.connect(gain);gain.connect(ctx.destination)
+      osc.start(ctx.currentTime+i*0.1);osc.stop(ctx.currentTime+i*0.1+0.45)
+    })
+  }catch(e){}
+}
+function playPop(){
+  try{
+    const ctx=getAudioCtx()
+    const osc=ctx.createOscillator();const gain=ctx.createGain()
+    osc.type='sine';osc.frequency.value=880
+    gain.gain.setValueAtTime(0.2,ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.12)
+    osc.connect(gain);gain.connect(ctx.destination)
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.15)
+  }catch(e){}
+}
+function playFlip(){
+  try{
+    const ctx=getAudioCtx()
+    const osc=ctx.createOscillator();const gain=ctx.createGain()
+    osc.type='triangle';osc.frequency.value=600
+    gain.gain.setValueAtTime(0.12,ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.08)
+    osc.connect(gain);gain.connect(ctx.destination)
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.1)
+  }catch(e){}
+}
+function playMatch(){
+  try{
+    const ctx=getAudioCtx()
+    ;[523,784].forEach((f,i)=>{
+      const osc=ctx.createOscillator();const gain=ctx.createGain()
+      osc.type='sine';osc.frequency.value=f
+      gain.gain.setValueAtTime(0.15,ctx.currentTime+i*0.08)
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.08+0.3)
+      osc.connect(gain);gain.connect(ctx.destination)
+      osc.start(ctx.currentTime+i*0.08);osc.stop(ctx.currentTime+i*0.08+0.35)
+    })
+  }catch(e){}
+}
+
+// ==========================================
+// GAME 3: SEQUENCE MEMORY (SIMON)
+// ==========================================
+let seqState={sequence:[],playerSeq:[],level:1,best:1,playing:false,showing:false}
+
+function startSequenceGame(){
+  seqState={sequence:[1],playerSeq:[],level:1,best:Math.max(seqState.best,seqState.level),playing:true,showing:false}
+  document.getElementById('seq-level').textContent='1'
+  document.getElementById('seq-best').textContent=seqState.best
+  document.getElementById('seq-status').textContent='WATCH'
+  document.getElementById('seq-start').style.display='none'
+  renderSeqGrid()
+  document.getElementById('seq-display').innerHTML=''
+  setTimeout(showSequence,600)
+}
+
+function renderSeqGrid(){
+  const g=document.getElementById('seq-grid')
+  g.innerHTML=''
+  for(let i=0;i<4;i++){
+    const b=document.createElement('div')
+    b.className='seq-btn'
+    b.onclick=()=>userSeqPress(i)
+    b.setAttribute('data-idx',i)
+    g.appendChild(b)
+  }
+}
+
+function showSequence(){
+  seqState.showing=true;seqState.playerSeq=[]
+  document.getElementById('seq-status').textContent='WATCH'
+  document.getElementById('seq-display').innerHTML=seqState.sequence.map(v=>'<span class="seq-segment c'+v+'"></span>').join('')
+  const btns=document.querySelectorAll('.seq-btn')
+  let i=0
+  const interval=setInterval(()=>{
+    if(i>0){btns[seqState.sequence[i-1]].classList.remove('active')}
+    if(i>=seqState.sequence.length){clearInterval(interval);seqState.showing=false;document.getElementById('seq-status').textContent='YOUR TURN';return}
+    btns[seqState.sequence[i]].classList.add('active')
+    playTone(SEQ_FREQS[seqState.sequence[i]])
+    i++
+  },550)
+}
+
+function userSeqPress(idx){
+  if(seqState.showing||!seqState.playing)return
+  const btns=document.querySelectorAll('.seq-btn')
+  btns[idx].classList.add('user-active')
+  playTone(SEQ_FREQS[idx])
+  setTimeout(()=>btns[idx].classList.remove('user-active'),200)
+  seqState.playerSeq.push(idx)
+  const pos=seqState.playerSeq.length-1
+  if(seqState.playerSeq[pos]!==seqState.sequence[pos]){
+    seqState.playing=false
+    playErrorBuzz()
+    document.getElementById('seq-status').textContent='WRONG!'
+    document.getElementById('seq-display').innerHTML=''
+    document.getElementById('seq-start').style.display=''
+    setTimeout(()=>showOverlay('Game Over','🧠 Level '+seqState.level,'Retry',startSequenceGame),500)
+    return
+  }
+  if(seqState.playerSeq.length===seqState.sequence.length){
+    seqState.level++
+    seqState.best=Math.max(seqState.best,seqState.level)
+    document.getElementById('seq-level').textContent=seqState.level
+    document.getElementById('seq-best').textContent=seqState.best
+    document.getElementById('seq-display').innerHTML=''
+    spawnParticles(window.innerWidth/2,window.innerHeight-100)
+    playWinChord()
+    seqState.sequence.push(Math.floor(Math.random()*4))
+    setTimeout(showSequence,800)
+  }
+}
+window.startSequenceGame=startSequenceGame
+
+// ==========================================
+// GAME 4: SPEED MATH
+// ==========================================
+let mathState={score:0,streak:0,timeLeft:60,interval:null,running:false,a:0,b:0,op:'+',answer:0}
+
+function startMathGame(){
+  clearInterval(mathState.interval)
+  mathState={score:0,streak:0,timeLeft:60,interval:null,running:true,a:0,b:0,op:'+',answer:0}
+  document.getElementById('math-score').textContent='0'
+  document.getElementById('math-streak').textContent='0'
+  document.getElementById('math-time').textContent='60'
+  document.getElementById('math-input').value=''
+  document.getElementById('math-input').focus()
+  document.getElementById('math-input').className='math-input'
+  document.getElementById('math-start').style.display='none'
+  generateMathProblem()
+  mathState.interval=setInterval(()=>{
+    mathState.timeLeft--
+    document.getElementById('math-time').textContent=mathState.timeLeft
+    if(mathState.timeLeft<=0){
+      clearInterval(mathState.interval);mathState.running=false
+      document.getElementById('math-start').style.display=''
+      showOverlay('Time\'s Up!','🏆 '+mathState.score,'Play Again',startMathGame)
+    }
+  },1000)
+}
+
+function generateMathProblem(){
+  const ops=['+','-','*']
+  mathState.op=ops[Math.floor(Math.random()*ops.length)]
+  if(mathState.op==='+'){mathState.a=rand(5,40);mathState.b=rand(2,30);mathState.answer=mathState.a+mathState.b}
+  else if(mathState.op==='-'){mathState.a=rand(10,50);mathState.b=rand(2,mathState.a-1);mathState.answer=mathState.a-mathState.b}
+  else{mathState.a=rand(2,12);mathState.b=rand(2,12);mathState.answer=mathState.a*mathState.b}
+  document.getElementById('math-problem').textContent=mathState.a+' '+mathState.op+' '+mathState.b+' = ?'
+  document.getElementById('math-input').value=''
+}
+
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&mathState.running){
+    const inp=document.getElementById('math-input')
+    const val=parseInt(inp.value)
+    const ic=document.getElementById('math-input')
+    if(val===mathState.answer){
+      playPop()
+      mathState.score++;mathState.streak++
+      document.getElementById('math-score').textContent=mathState.score
+      document.getElementById('math-streak').textContent=mathState.streak
+      ic.className='math-input correct'
+      setTimeout(()=>ic.className='math-input',300)
+      generateMathProblem()
+      inp.focus()
+    }else{
+      playErrorBuzz()
+      mathState.streak=0
+      document.getElementById('math-streak').textContent='0'
+      ic.className='math-input wrong'
+      setTimeout(()=>{ic.className='math-input';inp.value=''},400)
+    }
+  }
+})
+
+window.startMathGame=startMathGame
+
+// ==========================================
+// GAME 5: VISUAL MATRIX (PATTERN RECOGNITION)
+// ==========================================
+let patState={score:0,round:1,best:0}
+
+const PAT_COLORS=['#ff4466','#4488ff','#00ff88','#ffd700','#cc44ff','#ff8844']
+const PAT_SHAPES=['●','■','▲','★','♦']
+
+function startPatternGame(){
+  patState.score=0;patState.round=1
+  document.getElementById('pat-score').textContent='0'
+  document.getElementById('pat-round').textContent='1'
+  document.getElementById('pat-best').textContent=patState.best
+  renderPatternPuzzle()
+}
+
+function renderPatternPuzzle(){
+  document.getElementById('pat-round').textContent=patState.round
+  const types=['sameColor','sameShape','checkerboard','sizeMatrix']
+  const type=types[Math.floor(Math.random()*types.length)]
+
+  if(type==='sameColor'){
+    const color=PAT_COLORS[Math.floor(Math.random()*PAT_COLORS.length)]
+    const missing=Math.floor(Math.random()*4)
+    const cells=[...Array(4)].map((_,i)=>i===missing?null:color)
+    const others=PAT_COLORS.filter(c=>c!==color)
+    const wrongColors=[...Array(3)].map(()=>others.splice(Math.floor(Math.random()*others.length),1)[0])
+    while(wrongColors.length<3){
+      const extra=PAT_COLORS[Math.floor(Math.random()*PAT_COLORS.length)]
+      if(extra!==color&&!wrongColors.includes(extra))wrongColors.push(extra)
+    }
+    const correctIdx=Math.floor(Math.random()*4)
+    const options=[...Array(4)].map((_,i)=>i===correctIdx?color:wrongColors.pop())
+    renderGrid2x2(cells,options,correctIdx,'color')
+  }else if(type==='sameShape'){
+    const shapeIdx=Math.floor(Math.random()*PAT_SHAPES.length)
+    const shape=PAT_SHAPES[shapeIdx]
+    const missing=Math.floor(Math.random()*4)
+    const cells=[...Array(4)].map((_,i)=>i===missing?null:shapeIdx)
+    const otherShapes=PAT_SHAPES.map((_,i)=>i).filter(i=>i!==shapeIdx)
+    const wrongShapes=[...Array(3)].map(()=>otherShapes.splice(Math.floor(Math.random()*otherShapes.length),1)[0])
+    while(wrongShapes.length<3){
+      const extra=Math.floor(Math.random()*PAT_SHAPES.length)
+      if(extra!==shapeIdx&&!wrongShapes.includes(extra))wrongShapes.push(extra)
+    }
+    const correctIdx=Math.floor(Math.random()*4)
+    const options=[...Array(4)].map((_,i)=>i===correctIdx?shapeIdx:wrongShapes.pop())
+    renderGrid2x2(cells,options,correctIdx,'shape')
+  }else if(type==='checkerboard'){
+    const c1=PAT_COLORS[Math.floor(Math.random()*PAT_COLORS.length)]
+    const c2=PAT_COLORS.filter(c=>c!==c1)[Math.floor(Math.random()*(PAT_COLORS.length-1))]
+    // Pattern: c1 c2 / c2 c1  (checkerboard)
+    const answer=c1
+    const missing=3 // bottom-right
+    const cells=[c1,c2,c2,null]
+    const others=PAT_COLORS.filter(c=>c!==answer&&c!==c2)
+    const wrongColors=[...Array(3)].map(()=>others.splice(Math.floor(Math.random()*others.length),1)[0])
+    while(wrongColors.length<3){
+      const extra=PAT_COLORS[Math.floor(Math.random()*PAT_COLORS.length)]
+      if(extra!==answer&&!wrongColors.includes(extra))wrongColors.push(extra)
+    }
+    const correctIdx=Math.floor(Math.random()*4)
+    const options=[...Array(4)].map((_,i)=>i===correctIdx?answer:wrongColors.pop())
+    renderGrid2x2(cells,options,correctIdx,'color')
+  }else{ // sizeMatrix - 3x3 with increasing sizes
+    const color=PAT_COLORS[Math.floor(Math.random()*PAT_COLORS.length)]
+    const shape=PAT_SHAPES[Math.floor(Math.random()*PAT_SHAPES.length)]
+    const sizes=['1rem','1.6rem','2.2rem']
+    const cells=[
+      {color,shape,size:sizes[0]},{color,shape,size:sizes[1]},{color,shape,size:sizes[2]},
+      {color,shape,size:sizes[0]},{color,shape,size:sizes[1]},{color,shape,size:sizes[2]},
+      {color,shape,size:sizes[0]},{color,shape,size:sizes[1]},null
+    ]
+    const answer={color,shape,size:sizes[2]}
+    const correctIdx=Math.floor(Math.random()*4)
+    const options=[
+      {color,shape,size:sizes[0]}, // wrong size: s
+      {color,shape,size:sizes[2]}, // CORRECT: l
+      {color,shape:PAT_SHAPES[(PAT_SHAPES.indexOf(shape)+1)%PAT_SHAPES.length],size:sizes[2]}, // wrong shape
+      {color:PAT_COLORS[(PAT_COLORS.indexOf(color)+1)%PAT_COLORS.length],shape,size:sizes[2]}, // wrong color
+    ]
+    // Put correct at correctIdx
+    const correct=options[1]
+    const wrongs=options.filter((_,i)=>i!==1)
+    options.length=0
+    for(let i=0;i<4;i++){
+      options.push(i===correctIdx?correct:wrongs.shift())
+    }
+    renderGrid3x3(cells,options,correctIdx)
+  }
+}
+
+function renderGrid2x2(cells,options,correctIdx,mode){
+  const container=document.getElementById('pattern-puzzle')
+  container.innerHTML=''
+  const grid=document.createElement('div');grid.className='pattern-grid';grid.style.gridTemplateColumns='repeat(2,1fr)'
+  cells.forEach(cell=>{
+    const c=document.createElement('div');c.className='pattern-cell'
+    if(cell===null){c.classList.add('missing');c.textContent='?'}
+    else if(mode==='color'){c.style.background=cell}
+    else{c.innerHTML=`<span style="font-size:2rem">${PAT_SHAPES[cell]}</span>`}
+    grid.appendChild(c)
+  })
+  container.appendChild(grid)
+  const optsDiv=document.createElement('div');optsDiv.className='pattern-options'
+  options.forEach((opt,i)=>{
+    const o=document.createElement('div');o.className='pattern-opt'
+    if(mode==='color')o.style.background=opt
+    else o.innerHTML=`<span style="font-size:1.6rem">${PAT_SHAPES[opt]}</span>`
+    o.onclick=()=>patternAnswer(i,correctIdx)
+    optsDiv.appendChild(o)
+  })
+  container.appendChild(optsDiv)
+}
+
+function renderGrid3x3(cells,options,correctIdx){
+  const container=document.getElementById('pattern-puzzle')
+  container.innerHTML=''
+  const grid=document.createElement('div');grid.className='pattern-grid pattern-3x3'
+  cells.forEach(cell=>{
+    const c=document.createElement('div');c.className='pattern-cell'
+    if(!cell){c.classList.add('missing');c.textContent='?'}
+    else c.innerHTML=`<span style="font-size:${cell.size};color:${cell.color}">${cell.shape}</span>`
+    grid.appendChild(c)
+  })
+  container.appendChild(grid)
+  const optsDiv=document.createElement('div');optsDiv.className='pattern-options'
+  options.forEach((opt,i)=>{
+    const o=document.createElement('div');o.className='pattern-opt'
+    o.innerHTML=`<span style="font-size:${opt.size};color:${opt.color}">${opt.shape}</span>`
+    o.onclick=()=>patternAnswer(i,correctIdx)
+    optsDiv.appendChild(o)
+  })
+  container.appendChild(optsDiv)
+}
+
+function patternAnswer(chosen,correct){
+  const opts=document.querySelectorAll('.pattern-opt')
+  opts.forEach((o,i)=>{
+    o.style.pointerEvents='none'
+    if(i===correct)o.classList.add('correct')
+    if(i===chosen&&i!==correct)o.classList.add('wrong')
+  })
+  if(chosen===correct){
+    playPop()
+    patState.score++;patState.round++
+    patState.best=Math.max(patState.best,patState.score)
+    document.getElementById('pat-score').textContent=patState.score
+    document.getElementById('pat-best').textContent=patState.best
+    spawnParticles(window.innerWidth/2,window.innerHeight-100)
+    setTimeout(renderPatternPuzzle,700)
+  }else{
+    playErrorBuzz()
+    setTimeout(()=>showOverlay('Wrong!','🧩 Score: '+patState.score,'Try Again',()=>{
+      patState.score=0;patState.round=1
+      document.getElementById('pat-score').textContent='0'
+      document.getElementById('pat-round').textContent='1'
+      renderPatternPuzzle()
+    }),400)
+  }
+}
+
+window.startPatternGame=startPatternGame
+
+// ==========================================
+// GAME 6: N-BACK (Visual Grid)
+// ==========================================
+let nbackState={n:1,sequence:[],seqIdx:0,trial:0,score:0,running:false,showTime:null}
+
+function startNbackGame(){
+  const keepN=nbackState.n||1
+  clearTimeout(nbackState.showTime)
+  nbackState={n:keepN,sequence:[],seqIdx:0,trial:0,score:0,running:true,showTime:null}
+  document.getElementById('nback-score').textContent='0'
+  document.getElementById('nback-level').textContent='N='+keepN
+  document.getElementById('nback-trial').textContent='0/20'
+  document.getElementById('nback-n').textContent=keepN
+  document.getElementById('nback-start').style.display='none'
+  document.getElementById('nback-yes').style.display=''
+  document.getElementById('nback-no').style.display=''
+  // Generate sequence of positions (0-8 for 3x3 grid)
+  nbackState.sequence=[]
+  for(let i=0;i<20+nbackState.n;i++){
+    nbackState.sequence.push(Math.floor(Math.random()*9))
+  }
+  renderNbackGrid()
+  nbackState.seqIdx=nbackState.n;nbackState.trial=0
+  showNextNback()
+}
+
+function renderNbackGrid(){
+  const grid=document.getElementById('nback-grid')
+  grid.innerHTML=''
+  for(let i=0;i<9;i++){
+    const cell=document.createElement('div')
+    cell.style.cssText='aspect-ratio:1;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);transition:all 0.2s'
+    cell.setAttribute('data-pos',i)
+    grid.appendChild(cell)
+  }
+}
+
+function showNextNback(){
+  if(nbackState.trial>=20){endNbackGame();return}
+  clearGrid()
+  const pos=nbackState.sequence[nbackState.seqIdx]
+  document.getElementById('nback-trial').textContent=(nbackState.trial+1)+'/20'
+  document.getElementById('nback-yes').disabled=false
+  document.getElementById('nback-no').disabled=false
+  nbackState.running=true
+  // Highlight the cell
+  const cells=document.querySelectorAll('#nback-grid div')
+  if(cells[pos]){
+    cells[pos].style.background='var(--accent)'
+    cells[pos].style.borderColor='var(--accent)'
+    cells[pos].style.boxShadow='0 0 24px rgba(0,240,255,0.5)'
+    cells[pos].style.transform='scale(1.05)'
+  }
+  // Show history
+  const histEl=document.getElementById('nback-history')
+  const history=nbackState.sequence.slice(Math.max(0,nbackState.seqIdx-nbackState.n),nbackState.seqIdx)
+  histEl.textContent='Previous: '+history.map(p=>p+1+'⬜').join(' ')
+  // Auto-timeout
+  nbackState.showTime=setTimeout(()=>{
+    if(!nbackState.running)return
+    playErrorBuzz()
+    clearGrid()
+    const cs=document.querySelectorAll('#nback-grid div')
+    cs.forEach(c=>{c.style.borderColor='#ff4466';c.style.background='rgba(255,68,102,0.1)'})
+    document.getElementById('nback-yes').disabled=true
+    document.getElementById('nback-no').disabled=true
+    nbackState.seqIdx++;nbackState.trial++
+    setTimeout(()=>{clearGrid();if(nbackState.trial>=20){endNbackGame();return}showNextNback()},500)
+  },2500)
+}
+
+function clearGrid(){
+  const cells=document.querySelectorAll('#nback-grid div')
+  cells.forEach(c=>{
+    c.style.background='rgba(255,255,255,0.02)'
+    c.style.borderColor='rgba(255,255,255,0.08)'
+    c.style.boxShadow=''
+    c.style.transform='scale(1)'
+  })
+}
+
+function nbackAnswer(answeredYes){
+  if(!nbackState.running)return
+  clearTimeout(nbackState.showTime)
+  nbackState.running=false
+  const currentPos=nbackState.sequence[nbackState.seqIdx]
+  const nBackPos=nbackState.sequence[nbackState.seqIdx-nbackState.n]
+  const isMatch=currentPos===nBackPos
+  document.getElementById('nback-yes').disabled=true
+  document.getElementById('nback-no').disabled=true
+  if(answeredYes===isMatch){
+    playPop()
+    nbackState.score++
+    document.getElementById('nback-score').textContent=nbackState.score
+  }else{
+    playErrorBuzz()
+  }
+  // Flash feedback on grid
+  const cells=document.querySelectorAll('#nback-grid div')
+  const feedbackColor=answeredYes===isMatch?'#00ff88':'#ff4466'
+  cells.forEach(c=>{c.style.borderColor=feedbackColor;c.style.background=feedbackColor==='#00ff88'?'rgba(0,255,136,0.08)':'rgba(255,68,102,0.08)'})
+  nbackState.seqIdx++;nbackState.trial++
+  setTimeout(()=>{
+    clearGrid()
+    if(nbackState.trial>=20){endNbackGame();return}
+    showNextNback()
+  },500)
+}
+window.nbackAnswer=nbackAnswer
+
+function endNbackGame(){
+  nbackState.running=false
+  clearGrid()
+  document.getElementById('nback-start').style.display=''
+  document.getElementById('nback-yes').style.display='none'
+  document.getElementById('nback-no').style.display='none'
+  document.getElementById('nback-history').textContent=''
+  const accuracy=Math.round((nbackState.score/20)*100)
+  let newN=nbackState.n
+  if(accuracy>=80){newN=Math.min(4,nbackState.n+1);playWinChord()}
+  else if(accuracy<50&&nbackState.n>1)newN=nbackState.n-1
+  nbackState.n=newN
+  document.getElementById('nback-level').textContent='N='+newN
+  document.getElementById('nback-n').textContent=newN
+  if(accuracy>=80)spawnParticles(window.innerWidth/2,window.innerHeight/2)
+  showOverlay('Round Over','🏆 '+nbackState.score+'/20 ('+accuracy+'%) — N='+newN,'Play Again',()=>startNbackGame())
+}
+window.startNbackGame=startNbackGame
+window.startNbackGame=startNbackGame
+
+// ==========================================
+// GAME 7: ODD ONE OUT
+// ==========================================
+let oddState={score:0,round:1,best:0}
+const ODD_COLORS=['#ff4466','#4488ff','#00ff88','#ffd700','#cc44ff']
+const ODD_SHAPES=['●','■','▲']
+
+function startOddGame(){
+  document.getElementById('odd-start').style.display='none'
+  oddState.score=0;oddState.round=1
+  document.getElementById('odd-score').textContent='0'
+  document.getElementById('odd-round').textContent='1'
+  document.getElementById('odd-best').textContent=Math.max(oddState.best,oddState.score)
+  renderOddGrid()
+}
+
+function renderOddGrid(){
+  document.getElementById('odd-round').textContent=oddState.round
+  const grid=document.getElementById('odd-grid')
+  grid.innerHTML=''
+  const baseColor=ODD_COLORS[Math.floor(Math.random()*ODD_COLORS.length)]
+  const baseShape=ODD_SHAPES[Math.floor(Math.random()*ODD_SHAPES.length)]
+  const baseSize='1.8rem'
+  // Decide what varies: color, shape, or size
+  const varyType=oddState.round<=3?'color':(oddState.round<=6?'shape':'size')
+  const oddIdx=Math.floor(Math.random()*9)
+  let cells=[]
+  for(let i=0;i<9;i++){
+    let color=baseColor,shape=baseShape,size=baseSize
+    if(i===oddIdx){
+      if(varyType==='color')color=ODD_COLORS[(ODD_COLORS.indexOf(baseColor)+1)%ODD_COLORS.length]
+      else if(varyType==='shape')shape=ODD_SHAPES[(ODD_SHAPES.indexOf(baseShape)+1)%ODD_SHAPES.length]
+      else if(varyType==='size')size='2.6rem'
+    }
+    cells.push({color,shape,size})
+  }
+  cells.forEach((cell,i)=>{
+    const c=document.createElement('div')
+    c.style.cssText='aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:2px solid rgba(255,255,255,0.06);cursor:pointer;transition:all 0.25s'
+    c.innerHTML=`<span style="font-size:${cell.size};color:${cell.color}">${cell.shape}</span>`
+    c.onmouseenter=()=>{c.style.borderColor='rgba(255,255,255,0.3)'}
+    c.onmouseleave=()=>{c.style.borderColor='rgba(255,255,255,0.06)'}
+    c.onclick=()=>oddAnswer(i===oddIdx,c)
+    grid.appendChild(c)
+  })
+}
+
+function oddAnswer(correct,el){
+  const cells=document.querySelectorAll('#odd-grid div')
+  cells.forEach(c=>c.style.pointerEvents='none')
+  if(correct){
+    playPop()
+    el.style.borderColor='#00ff88';el.style.background='rgba(0,255,136,0.12)'
+    oddState.score++;oddState.round++
+    oddState.best=Math.max(oddState.best,oddState.score)
+    document.getElementById('odd-score').textContent=oddState.score
+    document.getElementById('odd-best').textContent=oddState.best
+    spawnParticles(window.innerWidth/2,window.innerHeight-100)
+    setTimeout(renderOddGrid,700)
+  }else{
+    playErrorBuzz()
+    el.style.borderColor='#ff4466';el.style.background='rgba(255,68,102,0.12)'
+    document.getElementById('odd-start').style.display=''
+    setTimeout(()=>showOverlay('Wrong!','👁️ Score: '+oddState.score,'Retry',()=>{
+      oddState.score=0;oddState.round=1
+      document.getElementById('odd-score').textContent='0'
+      document.getElementById('odd-round').textContent='1'
+      renderOddGrid()
+    }),400)
+  }
+}
+window.startOddGame=startOddGame
+
+// ==========================================
+// GAME 8: NUMBER SEQUENCE
+// ==========================================
+let nsState={score:0,round:1,best:0,answer:0}
+
+function startNumSeqGame(){
+  document.getElementById('ns-start').style.display='none'
+  nsState={score:0,round:1,best:nsState.best,answer:0}
+  document.getElementById('ns-score').textContent='0'
+  document.getElementById('ns-round').textContent='1'
+  document.getElementById('ns-best').textContent=nsState.best
+  document.getElementById('ns-input').value=''
+  document.getElementById('ns-input').focus()
+  generateNumSeq()
+}
+
+function generateNumSeq(){
+  let seq=[],answer
+  const type=nsState.round<=3?0:Math.floor(Math.random()*4)
+  if(type===0||type===4){
+    // Arithmetic: a, a+d, a+2d...
+    const a=rand(1,20),d=rand(1,10)
+    seq=[a,a+d,a+2*d,a+3*d];answer=a+4*d
+  }else if(type===1){
+    // Geometric: a, a*r, a*r^2...
+    const a=rand(1,5),r=rand(2,3)
+    seq=[a,a*r,a*r*r,a*r*r*r];answer=a*r*r*r*r
+  }else if(type===2){
+    // +1, +2, +3, +4...
+    const a=rand(1,10)
+    seq=[a,a+1,a+3,a+6];answer=a+10
+  }else{
+    // Squares: 1,4,9,16,25...
+    const n=rand(1,6)
+    seq=[n*n,(n+1)*(n+1),(n+2)*(n+2),(n+3)*(n+3)];answer=(n+4)*(n+4)
+  }
+  nsState.answer=answer
+  document.getElementById('ns-sequence').textContent=seq.join(', ')+', ?'
+  document.getElementById('ns-input').value=''
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('screen-numseq').classList.contains('active')){
+    const val=parseInt(document.getElementById('ns-input').value)
+    const inp=document.getElementById('ns-input')
+    if(val===nsState.answer){
+      playPop()
+      nsState.score++;nsState.round++
+      nsState.best=Math.max(nsState.best,nsState.score)
+      document.getElementById('ns-score').textContent=nsState.score
+      document.getElementById('ns-round').textContent=nsState.round
+      document.getElementById('ns-best').textContent=nsState.best
+      inp.className='math-input correct'
+      setTimeout(()=>inp.className='math-input',300)
+      spawnParticles(window.innerWidth/2,window.innerHeight-100)
+      generateNumSeq()
+    }else{
+      playErrorBuzz()
+      inp.className='math-input wrong'
+      document.getElementById('ns-start').style.display=''
+      setTimeout(()=>{
+        inp.className='math-input'
+        showOverlay('Wrong!','📐 '+nsState.answer,'Try Again',()=>{
+          startNumSeqGame()
+        })
+      },400)
+    }
+  }
+})
+window.startNumSeqGame=startNumSeqGame
+
+// ==========================================
+// GAME 9: WORD SCRAMBLE
+// ==========================================
+const WS_WORDS=[
+  'CAT','DOG','SUN','CAR','BED','HAT','CUP','PEN','BAG','MAP',
+  'FISH','BIRD','TREE','BOOK','MOON','STAR','RAIN','SNOW','FIRE','LAKE',
+  'APPLE','HOUSE','PLANE','HEART','OCEAN','MUSIC','DREAM','LIGHT','STONE','CLOUD',
+  'PLANET','BRIDGE','FOREST','GARDEN','WINTER','SILVER','GOLDEN','TIGER','EAGLE','RABBIT',
+  'JUNGLE','PUZZLE','TEMPLE','DRAGON','CASTLE','ISLAND','DESERT','VOLCANO','DOLPHIN','EMERALD'
+]
+let wsState={score:0,round:1,best:0,word:'',scrambled:''}
+
+function startScrambleGame(){
+  document.getElementById('ws-start').style.display='none'
+  wsState={score:0,round:1,best:wsState.best,word:'',scrambled:''}
+  document.getElementById('ws-score').textContent='0'
+  document.getElementById('ws-round').textContent='1'
+  document.getElementById('ws-best').textContent=wsState.best
+  document.getElementById('ws-input').value=''
+  document.getElementById('ws-input').focus()
+  generateScramble()
+}
+
+function generateScramble(){
+  const len=wsState.round<=3?3:(wsState.round<=6?4:wsState.round<=10?5:6)
+  const pool=WS_WORDS.filter(w=>w.length===len)
+  if(pool.length===0){wsState.word='TEST';wsState.scrambled='T S E T';document.getElementById('ws-letters').textContent='T S E T';document.getElementById('ws-input').value='';return}
+  const word=pool[Math.floor(Math.random()*pool.length)]
+  wsState.word=word.toUpperCase()
+  // Scramble ensuring it's different from original
+  let letters=wsState.word.split('')
+  do{
+    for(let i=letters.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1))
+      ;[letters[i],letters[j]]=[letters[j],letters[i]]
+    }
+  }while(letters.join('')===wsState.word&&letters.length>2)
+  wsState.scrambled=letters.join(' ')
+  document.getElementById('ws-letters').textContent=wsState.scrambled
+  document.getElementById('ws-input').value=''
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('screen-scramble').classList.contains('active')&&wsState.word){
+    const val=document.getElementById('ws-input').value.trim().toUpperCase()
+    const inp=document.getElementById('ws-input')
+    if(val===wsState.word){
+      playPop()
+      wsState.score++;wsState.round++
+      wsState.best=Math.max(wsState.best,wsState.score)
+      document.getElementById('ws-score').textContent=wsState.score
+      document.getElementById('ws-round').textContent=wsState.round
+      document.getElementById('ws-best').textContent=wsState.best
+      inp.className='math-input correct'
+      setTimeout(()=>inp.className='math-input',300)
+      spawnParticles(window.innerWidth/2,window.innerHeight-100)
+      generateScramble()
+    }else{
+      playErrorBuzz()
+      inp.className='math-input wrong'
+      document.getElementById('ws-start').style.display=''
+      setTimeout(()=>{
+        inp.className='math-input'
+        showOverlay('Wrong!','🔤 '+wsState.word,'Try Again',()=>{
+          startScrambleGame()
+        })
+      },400)
+    }
+  }
+})
+window.startScrambleGame=startScrambleGame
+
+// ===== INIT =====
+startMemoryGame()
+</script>
+</body>
+</html>
